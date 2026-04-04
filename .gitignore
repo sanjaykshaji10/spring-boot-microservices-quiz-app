@@ -1,0 +1,11 @@
+# Ignore Maven build files
+**/target/
+**/*.class
+
+# Ignore IDE settings
+.vscode/
+
+# Ignore Maven wrapper
+.mvn/
+mvnw
+mvnw.cmd
