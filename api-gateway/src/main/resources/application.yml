@@ -1,0 +1,56 @@
+server:
+  port: 8765
+
+spring:
+  application:
+    name: api-gateway
+  
+  # Removed the Netty exclusion as it's no longer needed (and causes crashes) in 3.x
+  autoconfigure:
+    exclude: 
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+
+  cloud:
+    gateway:
+      # These routes tell the gateway to forward traffic to your other services
+      routes:
+        # 1. Route for Authentication (Open)
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/auth/**
+
+        # 2. Route for Questions (Protected by your Filter)
+        - id: question-service
+          uri: lb://QUESTION-SERVICE
+          predicates:
+            - Path=/questions/**
+          filters:
+            - name: Authentication # This looks for your AuthenticationGatewayFilterFactory
+
+        # 3. Route for Quizzes (Protected by your Filter)
+        - id: quiz-service
+          uri: lb://QUIZ-SERVICE
+          predicates:
+            - Path=/quiz/**
+          filters:
+            - name: Authentication
+
+# Eureka Registry configuration
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+# Your custom JWT property for the Filter
+jwt:
+  secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+
+# Verbose logging to help us track the request flow
+logging:
+  level:
+    org.springframework.cloud.gateway: TRACE
+    org.springframework.http.server.reactive: DEBUG
+    reactor.netty: DEBUG
